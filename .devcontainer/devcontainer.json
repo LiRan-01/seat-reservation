@@ -1,12 +1,12 @@
 {
   "name": "seat-reservation",
-  "image": "mcr.microsoft.com/devcontainers/java:17",
+  "image": "mcr.microsoft.com/devcontainers/java:17-bookworm",
   "features": {
     "ghcr.io/devcontainers/features/node:1": { "version": "20" },
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-  "postCreateCommand": "bash .devcontainer/setup.sh",
-  "postStartCommand": "docker compose up -d --build",
+  "postCreateCommand": "bash .devcontainer/setup.sh || true",
+  "postStartCommand": "docker compose up -d --build || true",
   "forwardPorts": [8080, 5173, 3306, 6379],
   "portsAttributes": {
     "8080": { "label": "后端 API" },
