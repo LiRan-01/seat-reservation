@@ -3,6 +3,13 @@
 # 这样即使网络抖动，codespace 也能正常进入编辑器，再手动重试即可。
 set +e
 
+echo "[setup] 检查 / 安装 Maven"
+if ! command -v mvn >/dev/null 2>&1; then
+  echo "[setup] 镜像未内置 mvn，尝试通过 apt 安装"
+  (sudo apt-get update -qq && sudo apt-get install -y -qq maven) || echo "[setup][warn] Maven 安装失败，后端预取将跳过"
+  export PATH="$PATH:/usr/share/maven/bin"
+fi
+
 echo "[setup] 预取后端 Maven 依赖"
 if command -v mvn >/dev/null 2>&1; then
   (cd backend && mvn -B -q dependency:go-offline) || echo "[setup][warn] Maven 依赖预取失败，可稍后手动执行"
