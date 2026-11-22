@@ -1,0 +1,16 @@
+== 智能自习室座位预约系统 · 功能验收 2026-11-22 11:38:22 ==
+PASS FT-01 | 座位图返回 20 个座位（A-01…A-20），空闲座位 busy=false
+PASS FT-02 | 预约成功 id=1，签到码长度=137
+PASS FT-03 | 第二人预约同一座位同一时段被拒绝（TIME_CONFLICT）
+PASS FT-04 | 签到成功，预约转为 USING
+PASS ET-02 | 同一签到码第二次使用被拒绝（REPLAY）
+PASS FT-06 | 暂离 25 分钟 → AWAY，返回后回到 USING 且清空 awayUntil
+FAIL FT-05 | 窗口外签到未被拦截：{"code":"TOKEN_MALFORMED","message":"参数或令牌无效","data":null}
+PASS ET-04 | 23:30→次日 00:30 跨天预约成功，时段连续不重叠
+FAIL FT-09 | 强制释放失败：{"code":"OK","message":"success","data":{"id":3,"seatId":4,"status":"RESERVED","start":"2026-11-22T13:38:23","end":"2026-11-22T14:38:23","checkinCode":"Mzo0OjE3
+INFO 已构造超时预约 id= 与候补 user=1004，等待定时任务（最多 120 秒）…
+FAIL FT-08 | 定时任务未在 120 秒内释放，当前状态：
+FAIL FT-08b | 未见任务日志：
+FAIL FT-07 | 未见候补通知日志
+PASS FT-10 | 统计接口返回当日上座率数据，当日预约 1 条："rate":0.003
+== 结果：PASS=8 FAIL=5 ==
