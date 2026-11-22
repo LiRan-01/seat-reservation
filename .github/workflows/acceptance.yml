@@ -39,6 +39,18 @@ jobs:
           docker logs seat-backend > backend.log 2>&1 || true
           docker compose down -v || true
 
+      - name: 汇总实测结果到运行摘要
+        if: always()
+        run: |
+          echo "## 功能验收" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat acceptance.txt >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "## 并发与性能" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat perf.txt >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
       - name: 上传实测结果
         if: always()
         uses: actions/upload-artifact@v4
