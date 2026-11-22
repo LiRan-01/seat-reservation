@@ -114,6 +114,7 @@ public class ReservationService {
         if (rows == 0) {
             throw new BizException("STATUS_INVALID", "状态已变化，请刷新后重试");
         }
+        r.setStatus(ReservationStatus.FORCED);
         updateSeat(r.getSeatId(), SeatStatus.AVAILABLE);
         return r;
     }

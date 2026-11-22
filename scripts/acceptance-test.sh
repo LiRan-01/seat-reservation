@@ -75,7 +75,7 @@ fi
 # ---------- FT-05 窗口外签到 ----------
 NOW_PAST=$(ts '-40 minutes')
 END_PAST=$(ts '+50 minutes')
-R5=$(tsv -X POST "$API/api/reservations" -d "{\"userId\":1003,\"seatId\":2,\"start\":\"$NOW_PAST\",\"end\":\"$END_PAST\"}")
+R5=$(tsv -X POST "$API/api/reservations" -d "{\"userId\":1002,\"seatId\":2,\"start\":\"$NOW_PAST\",\"end\":\"$END_PAST\"}")
 C5=$(tsv -X POST "$API/api/checkin" -d "{\"token\":\"$(jstr "$R5" checkinCode)\",\"deviceId\":\"dev-C\"}")
 if [[ "$C5" == *"OUT_OF_WINDOW"* ]]; then
   ok FT-05 "开始后 40 分钟签到被拒绝（OUT_OF_WINDOW）"
@@ -105,7 +105,7 @@ fi
 # ---------- FT-07/FT-08 未签到超时释放 + 候补通知 ----------
 NOW_OLD=$(ts '-30 minutes')
 END_OLD=$(ts '+30 minutes')
-R10=$(tsv -X POST "$API/api/reservations" -d "{\"userId\":1003,\"seatId\":3,\"start\":\"$NOW_OLD\",\"end\":\"$END_OLD\"}")
+R10=$(tsv -X POST "$API/api/reservations" -d "{\"userId\":1002,\"seatId\":3,\"start\":\"$NOW_OLD\",\"end\":\"$END_OLD\"}")
 RID10=$(jnum "$R10" id)
 W7=$(tsv -X POST "$API/api/waitlist" -d "{\"seatId\":3,\"userId\":1004,\"start\":\"$NOW_OLD\",\"end\":\"$END_OLD\"}")
 echo "INFO 已构造超时预约 id=$RID10 与候补 user=1004，等待定时任务（最多 120 秒）…"
