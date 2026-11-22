@@ -21,7 +21,8 @@ export API NOW END OUT
 echo "== 并发与性能实测 $(date '+%F %T') =="
 reset_db
 
-# ---------- 1. 座位图查询：150 次请求 / 30 并发 ----------
+# ---------- 1. 座位图查询：预热后 150 次请求 / 30 并发 ----------
+seq 1 60 | xargs -P 20 -I{} sh -c 'curl -s -o /dev/null "$API/api/rooms/1/seats?start=$NOW&end=$END"'
 : > "$OUT/seats.txt"
 seq 1 150 | xargs -P 30 -I{} sh -c 'curl -s -o /dev/null -w "%{time_total}\n" "$API/api/rooms/1/seats?start=$NOW&end=$END"' >> "$OUT/seats.txt"
 echo "座位图查询 150 次请求（30 并发）：P50=$(pct "$OUT/seats.txt" 0.5)ms，P95=$(pct "$OUT/seats.txt" 0.95)ms"

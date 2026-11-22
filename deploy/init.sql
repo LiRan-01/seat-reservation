@@ -77,13 +77,13 @@ INSERT INTO seat (room_id, code, feature, status)
 SELECT 1, CONCAT('A-', LPAD(n, 2, '0')),
        CASE WHEN n % 5 = 0 THEN '靠窗,有插座' WHEN n % 3 = 0 THEN '靠窗' ELSE '靠入口' END,
        'AVAILABLE'
-FROM (SELECT @row := @row + 1 AS n FROM information_schema.tables, (SELECT @row := 0) t LIMIT 20) x;
+FROM (SELECT ROW_NUMBER() OVER () AS n FROM information_schema.columns LIMIT 20) x;
 
 INSERT INTO seat (room_id, code, feature, status)
 SELECT 2, CONCAT('B-', LPAD(n, 2, '0')),
        CASE WHEN n % 4 = 0 THEN '有插座' ELSE '靠窗' END,
        'AVAILABLE'
-FROM (SELECT @row2 := @row2 + 1 AS n FROM information_schema.tables, (SELECT @row2 := 0) t LIMIT 20) y;
+FROM (SELECT ROW_NUMBER() OVER () AS n FROM information_schema.columns LIMIT 20) y;
 
 INSERT INTO user_credit (user_id, score) VALUES (1001, 100), (1002, 90), (1003, 55)
 ON DUPLICATE KEY UPDATE score = VALUES(score);
