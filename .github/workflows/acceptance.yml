@@ -8,6 +8,8 @@ on:
 jobs:
   acceptance:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -60,3 +62,14 @@ jobs:
             acceptance.txt
             perf.txt
             backend.log
+
+      - name: 实测结果回写入仓
+        if: always()
+        run: |
+          mkdir -p docs/实测结果
+          cp acceptance.txt perf.txt docs/实测结果/ 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/实测结果 || true
+          git commit -m "test: 回写实测结果（run #${{ github.run_number }}）" || true
+          git push || true
