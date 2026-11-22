@@ -37,4 +37,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByStatusAndAwayUntilBefore(ReservationStatus status, LocalDateTime time);
 
     List<Reservation> findBySeatIdAndStatusIn(Long seatId, List<ReservationStatus> statuses);
+
+    /** 统计报表：取某一天内的预约（按开始时间落在当天） */
+    List<Reservation> findByStartTimeBetween(LocalDateTime start, LocalDateTime end);
 }

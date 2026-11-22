@@ -42,6 +42,7 @@ public class ReleaseJob {
     @Scheduled(fixedDelay = 60000L, initialDelay = 60000L)
     @Transactional
     public void scan() {
+        long t0 = System.currentTimeMillis();
         LocalDateTime now = LocalDateTime.now();
         int released = 0;
 
@@ -59,7 +60,8 @@ public class ReleaseJob {
         }
 
         if (released > 0) {
-            log.info("release job finished, released={}", released);
+            log.info("release job finished, released={}, cost={}ms",
+                    released, System.currentTimeMillis() - t0);
         }
     }
 
