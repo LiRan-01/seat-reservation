@@ -1,9 +1,24 @@
-== 并发与性能实测 2026-11-22 11:53:24 ==
-座位图查询 150 次请求（30 并发）：P50=266ms，P95=398ms
+== 并发与性能实测 2026-11-22 11:59:47 ==
+座位图查询 150 次请求（30 并发）：P50=335ms，P95=489ms
 抢座 200 次请求（40 座位 × 5 次，40 并发）：成功 29，冲突 116，服务异常 0，其他 55，超卖单数 0
+响应码分布：
+     29 "code":"OK"
+     55 "code":"SEAT_NOT_FOUND"
+    116 "code":"TIME_CONFLICT"
+座位 21 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 22 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 23 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 24 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 25 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 26 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 27 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 28 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 29 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 30 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
+座位 31 创建失败：{"code":"SEAT_NOT_FOUND","message":"座位不存在","data":null}
 预约创建成功 29 / 40（签到码 29 个）
-签到请求 29 条（20 并发）：P50=33ms，P95=54ms
+签到请求 29 条（20 并发）：P50=34ms，P95=54ms
 mysql: [Warning] Using a password on the command line interface can be insecure.
-已插入过期未签到预约 500 条，等待定时任务（最多 150 秒）…
-定时任务单批：released=2, cost=21ms
+已插入过期未签到预约 500 条，等待定时任务释放（最多 150 秒）…
+定时任务单批：剩余未处理 0 条，日志 released=500, cost=1633ms
 == 实测结束 ==
