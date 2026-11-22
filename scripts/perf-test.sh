@@ -36,6 +36,8 @@ SRV=$(grep -l 'SERVER_ERROR' "$OUT"/resp_*.txt 2>/dev/null | wc -l)
 OTHER=$((200 - OKC - CFC - SRV))
 OVER=$($MYSQL "USE seat; SELECT COUNT(*) FROM (SELECT seat_id,start_time,COUNT(*) c FROM reservation WHERE status IN ('RESERVED','USING','AWAY') GROUP BY seat_id,start_time HAVING c>1) x;" | tail -1)
 echo "抢座 200 次请求（40 座位 × 5 次，40 并发）：成功 $OKC，冲突 $CFC，服务异常 $SRV，其他 $OTHER，超卖单数 $OVER"
+echo "响应码分布："
+cat "$OUT"/resp_*.txt 2>/dev/null | grep -o '"code":"[A-Z_]*"' | sort | uniq -c
 
 # ---------- 3. 40 并发签到（每个座位一张预约） ----------
 reset_db
@@ -45,7 +47,11 @@ for i in $(seq 1 40); do
   r=$(curl -s -X POST "$API/api/reservations" -H "Content-Type: application/json" \
     -d "{\"userId\":1002,\"seatId\":$i,\"start\":\"$NOW\",\"end\":\"$END\"}")
   tok=$(echo "$r" | grep -o '"checkinCode":"[^"]*"' | cut -d'"' -f4)
-  if [ -n "$tok" ]; then echo "$tok" >> "$OUT/tokens.txt"; CREATED=$((CREATED + 1)); fi
+  if [ -n "$tok" ]; then
+    echo "$tok" >> "$OUT/tokens.txt"; CREATED=$((CREATED + 1))
+  else
+    echo "座位 $i 创建失败：$(echo "$r" | head -c 120)"
+  fi
 done
 echo "预约创建成功 $CREATED / 40（签到码 $(wc -l < "$OUT/tokens.txt") 个）"
 cat "$OUT/tokens.txt" | xargs -P 20 -I{} sh -c 'curl -s -o /dev/null -w "%{time_total}\n" -X POST "$API/api/checkin" -H "Content-Type: application/json" -d "{\"token\":\"{}\",\"deviceId\":\"load\"}"' > "$OUT/checkin.txt"
@@ -61,12 +67,16 @@ SELECT 1001, (n % 40) + 1,
        'RESERVED'
 FROM (SELECT ROW_NUMBER() OVER () AS n FROM information_schema.columns LIMIT 500) x;" 2>&1 | tail -3
 INS=$($MYSQL "USE seat; SELECT COUNT(*) FROM reservation;" | tail -1)
-echo "已插入过期未签到预约 $INS 条，等待定时任务（最多 150 秒）…"
+echo "已插入过期未签到预约 $INS 条，等待定时任务释放（最多 150 秒）…"
+T0=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 COST=""
 for i in $(seq 1 30); do
-  COST=$(docker logs seat-backend --since 6m 2>&1 | grep -o 'released=[0-9]*, cost=[0-9]*ms' | tail -1)
-  [ -n "$COST" ] && break
+  REMAIN=$($MYSQL "USE seat; SELECT COUNT(*) FROM reservation WHERE status='RESERVED';" | tail -1)
+  if [ "$REMAIN" = "0" ]; then
+    COST=$(docker logs seat-backend --since "$T0" 2>&1 | grep -o 'released=[0-9]*, cost=[0-9]*ms' | tail -1)
+    break
+  fi
   sleep 5
 done
-echo "定时任务单批：$COST"
+echo "定时任务单批：剩余未处理 $REMAIN 条，日志 $COST"
 echo "== 实测结束 =="
