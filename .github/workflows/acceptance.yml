@@ -1,0 +1,50 @@
+name: 验收与性能实测
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 启动全栈环境
+        run: |
+          docker compose up -d --build
+          docker compose ps
+
+      - name: 等待后端就绪
+        run: |
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/rooms || true)
+            echo "try $i -> $code"
+            [ "$code" = "200" ] && break
+            sleep 5
+          done
+          curl -s http://localhost:8080/api/rooms | head -c 300; echo
+
+      - name: 功能验收（表 18 / 表 20）
+        run: bash scripts/acceptance-test.sh | tee acceptance.txt
+
+      - name: 并发与性能（表 19）
+        run: bash scripts/perf-test.sh | tee perf.txt
+
+      - name: 收集容器日志
+        if: always()
+        run: |
+          docker compose ps -a
+          docker logs seat-backend > backend.log 2>&1 || true
+          docker compose down -v || true
+
+      - name: 上传实测结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-results
+          path: |
+            acceptance.txt
+            perf.txt
+            backend.log
