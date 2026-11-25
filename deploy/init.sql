@@ -73,14 +73,14 @@ CREATE TABLE IF NOT EXISTS user_credit (
 -- 示例数据：两个自习室，各 20 个座位
 INSERT INTO room (id, name, floor) VALUES (1, '第一自习室', 2), (2, '第二自习室', 3);
 
-INSERT INTO seat (room_id, code, feature, status)
-SELECT 1, CONCAT('A-', LPAD(n, 2, '0')),
+INSERT INTO seat (id, room_id, code, feature, status)
+SELECT n, 1, CONCAT('A-', LPAD(n, 2, '0')),
        CASE WHEN n % 5 = 0 THEN '靠窗,有插座' WHEN n % 3 = 0 THEN '靠窗' ELSE '靠入口' END,
        'AVAILABLE'
 FROM (SELECT ROW_NUMBER() OVER () AS n FROM information_schema.columns LIMIT 20) x;
 
-INSERT INTO seat (room_id, code, feature, status)
-SELECT 2, CONCAT('B-', LPAD(n, 2, '0')),
+INSERT INTO seat (id, room_id, code, feature, status)
+SELECT 20 + n, 2, CONCAT('B-', LPAD(n, 2, '0')),
        CASE WHEN n % 4 = 0 THEN '有插座' ELSE '靠窗' END,
        'AVAILABLE'
 FROM (SELECT ROW_NUMBER() OVER () AS n FROM information_schema.columns LIMIT 20) y;

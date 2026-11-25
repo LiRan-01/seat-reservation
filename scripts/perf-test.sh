@@ -19,6 +19,7 @@ NOW=$(ts now)
 END=$(ts '+90 minutes')
 export API NOW END OUT
 echo "== 并发与性能实测 $(date '+%F %T') =="
+echo "座位总数：$($MYSQL 'USE seat; SELECT COUNT(*) FROM seat;' | tail -1)"
 reset_db
 
 # ---------- 1. 座位图查询：预热后 150 次请求 / 30 并发 ----------
