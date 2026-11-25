@@ -9,8 +9,10 @@
 ## 一键启动（GitHub Codespaces）
 
 1. 打开仓库页面，点击 **Code → Codespaces → Create codespace**；
-2. 等待容器初始化（会自动预取 Maven 与 npm 依赖）；
-3. 容器启动时自动执行 `docker compose up -d --build`，随后在 **端口 5173** 打开前端页面即可选座演示。
+2. 等待容器初始化：`.devcontainer/setup.sh` 会按需安装 Maven（镜像本身只带 JDK），并预取后端依赖、安装前端依赖；某一步失败只打印告警，不会阻断容器创建；
+3. 容器启动后会尝试执行 `docker compose up -d --build`；若日志中没有自动拉起，在终端手动执行一次即可，随后在 **端口 5173** 打开前端页面选座演示。
+
+> 2026-11-25 实测：GitHub Actions 上一条命令拉起 mysql / redis / backend / frontend 四个容器，40 个座位初始化正常，功能验收 13/13 通过，原始结果见 `docs/实测结果/`。
 
 本地已有 Docker 时，等价命令只有一条：
 
