@@ -70,6 +70,18 @@ CREATE TABLE IF NOT EXISTS user_credit (
   score INT NOT NULL DEFAULT 100
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS notification (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  type VARCHAR(32) NOT NULL,
+  title VARCHAR(128) NOT NULL,
+  content VARCHAR(512),
+  seat_id BIGINT,
+  is_read TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_noti_user (user_id)
+) ENGINE=InnoDB;
+
 -- 示例数据：两个自习室，各 20 个座位
 INSERT INTO room (id, name, floor) VALUES (1, '第一自习室', 2), (2, '第二自习室', 3);
 
@@ -87,3 +99,26 @@ FROM (SELECT ROW_NUMBER() OVER () AS n FROM information_schema.columns LIMIT 20)
 
 INSERT INTO user_credit (user_id, score) VALUES (1001, 100), (1002, 90), (1003, 55)
 ON DUPLICATE KEY UPDATE score = VALUES(score);
+
+-- 物理外键约束：明确表间从属关系，默认 RESTRICT 防止误删
+ALTER TABLE seat
+  ADD CONSTRAINT fk_seat_room FOREIGN KEY (room_id) REFERENCES room(id);
+
+ALTER TABLE reservation
+  ADD CONSTRAINT fk_res_seat FOREIGN KEY (seat_id) REFERENCES seat(id),
+  ADD CONSTRAINT fk_res_user FOREIGN KEY (user_id) REFERENCES user_credit(user_id);
+
+ALTER TABLE checkin_record
+  ADD CONSTRAINT fk_checkin_res FOREIGN KEY (reservation_id) REFERENCES reservation(id);
+
+ALTER TABLE violation
+  ADD CONSTRAINT fk_vio_res FOREIGN KEY (reservation_id) REFERENCES reservation(id),
+  ADD CONSTRAINT fk_vio_user FOREIGN KEY (user_id) REFERENCES user_credit(user_id);
+
+ALTER TABLE wait_entry
+  ADD CONSTRAINT fk_wait_seat FOREIGN KEY (seat_id) REFERENCES seat(id),
+  ADD CONSTRAINT fk_wait_user FOREIGN KEY (user_id) REFERENCES user_credit(user_id);
+
+ALTER TABLE notification
+  ADD CONSTRAINT fk_noti_user FOREIGN KEY (user_id) REFERENCES user_credit(user_id),
+  ADD CONSTRAINT fk_noti_seat FOREIGN KEY (seat_id) REFERENCES seat(id);

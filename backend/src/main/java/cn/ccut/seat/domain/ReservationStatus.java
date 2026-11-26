@@ -6,5 +6,6 @@ public enum ReservationStatus {
     AWAY,       // 暂离中
     RELEASED,   // 正常释放
     NO_SHOW,    // 爽约（未签到 / 暂离超时）
-    FORCED      // 管理员强制释放
+    FORCED,     // 管理员强制释放
+    CANCELLED   // 用户主动取消
 }

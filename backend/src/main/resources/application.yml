@@ -26,6 +26,8 @@ app:
   no-show-minutes: 15
   away-max-minutes: 30
   credit-threshold: 60
+  violation-score: -5
+  checkin-code-minutes: 120
 
 logging:
   level:

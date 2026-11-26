@@ -21,20 +21,26 @@ public class ReservationService {
     private final CreditRepository creditRepository;
     private final CodeSigner codeSigner;
     private final StringRedisTemplate redis;
+    private final WaitlistService waitlistService;
 
     @Value("${app.credit-threshold}")
     private int creditThreshold;
+
+    @Value("${app.checkin-code-minutes}")
+    private int checkinCodeMinutes;
 
     public ReservationService(SeatRepository seatRepository,
                               ReservationRepository reservationRepository,
                               CreditRepository creditRepository,
                               CodeSigner codeSigner,
-                              StringRedisTemplate redis) {
+                              StringRedisTemplate redis,
+                              WaitlistService waitlistService) {
         this.seatRepository = seatRepository;
         this.reservationRepository = reservationRepository;
         this.creditRepository = creditRepository;
         this.codeSigner = codeSigner;
         this.redis = redis;
+        this.waitlistService = waitlistService;
     }
 
     /** 预约：行锁 + 时段冲突校验 + 信用门槛，三步在同一事务内完成 */
@@ -51,8 +57,13 @@ public class ReservationService {
         if (reservationRepository.countOverlap(seatId, start, end) > 0) {
             throw new BizException("TIME_CONFLICT", "该时段座位已被预约");
         }
-        int score = creditRepository.findById(userId).map(Credit::getScore).orElse(100);
-        if (score < creditThreshold) {
+        // 信用记录不存在则先初始化（默认 100 分），同时保证外键可写入
+        Credit credit = creditRepository.findById(userId).orElseGet(() -> {
+            Credit c = new Credit();
+            c.setUserId(userId);
+            return creditRepository.save(c);
+        });
+        if (credit.getScore() < creditThreshold) {
             throw new BizException("CREDIT_LOW", "信用分不足，暂不能预约");
         }
 
@@ -63,7 +74,7 @@ public class ReservationService {
         r.setEndTime(end);
         r.setStatus(ReservationStatus.RESERVED);
         r = reservationRepository.saveAndFlush(r);
-        r.setCheckinCode(codeSigner.sign(r.getId(), seatId, 120));
+        r.setCheckinCode(codeSigner.sign(r.getId(), seatId, checkinCodeMinutes));
         reservationRepository.save(r);
 
         seat.setStatus(SeatStatus.RESERVED);
@@ -105,9 +116,7 @@ public class ReservationService {
     public Reservation forceRelease(Long reservationId, String reason) {
         Reservation r = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BizException("RESERVATION_NOT_FOUND", "预约单不存在"));
-        if (r.getStatus() == ReservationStatus.RELEASED
-                || r.getStatus() == ReservationStatus.NO_SHOW
-                || r.getStatus() == ReservationStatus.FORCED) {
+        if (isTerminal(r.getStatus())) {
             throw new BizException("STATUS_INVALID", "该预约已是终态");
         }
         int rows = reservationRepository.markStatus(reservationId, r.getStatus(), ReservationStatus.FORCED);
@@ -116,7 +125,56 @@ public class ReservationService {
         }
         r.setStatus(ReservationStatus.FORCED);
         updateSeat(r.getSeatId(), SeatStatus.AVAILABLE);
+        waitlistService.notifyFirst(r.getSeatId());
         return r;
+    }
+
+    /** 用户主动取消：仅未签到的预约可取消，不扣分，释放座位并通知候补 */
+    @Transactional
+    public Reservation cancel(Long reservationId, Long userId) {
+        Reservation r = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new BizException("RESERVATION_NOT_FOUND", "预约单不存在"));
+        if (userId != null && !r.getUserId().equals(userId)) {
+            throw new BizException("USER_MISMATCH", "只能取消本人的预约");
+        }
+        if (r.getStatus() != ReservationStatus.RESERVED) {
+            throw new BizException("STATUS_INVALID", "只有未签到的预约可以取消");
+        }
+        int rows = reservationRepository.markStatus(reservationId,
+                ReservationStatus.RESERVED, ReservationStatus.CANCELLED);
+        if (rows == 0) {
+            throw new BizException("STATUS_INVALID", "状态已变化，请刷新后重试");
+        }
+        r.setStatus(ReservationStatus.CANCELLED);
+        updateSeat(r.getSeatId(), SeatStatus.AVAILABLE);
+        waitlistService.notifyFirst(r.getSeatId());
+        return r;
+    }
+
+    /** 用户正常结束使用：非终态预约统一置为 RELEASED，让该状态真正生效 */
+    @Transactional
+    public Reservation finish(Long reservationId) {
+        Reservation r = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new BizException("RESERVATION_NOT_FOUND", "预约单不存在"));
+        ReservationStatus from = r.getStatus();
+        if (isTerminal(from)) {
+            throw new BizException("STATUS_INVALID", "该预约已是终态");
+        }
+        int rows = reservationRepository.markStatus(reservationId, from, ReservationStatus.RELEASED);
+        if (rows == 0) {
+            throw new BizException("STATUS_INVALID", "状态已变化，请刷新后重试");
+        }
+        r.setStatus(ReservationStatus.RELEASED);
+        updateSeat(r.getSeatId(), SeatStatus.AVAILABLE);
+        waitlistService.notifyFirst(r.getSeatId());
+        return r;
+    }
+
+    private boolean isTerminal(ReservationStatus status) {
+        return status == ReservationStatus.RELEASED
+                || status == ReservationStatus.NO_SHOW
+                || status == ReservationStatus.FORCED
+                || status == ReservationStatus.CANCELLED;
     }
 
     public Reservation get(Long id) {

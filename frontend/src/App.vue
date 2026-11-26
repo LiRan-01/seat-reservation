@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { api, type Seat } from './api'
+import { api, type Seat, type NotificationItem } from './api'
 
 const rooms = ref<{ id: number; name: string; floor: number }[]>([])
 const roomId = ref(1)
@@ -9,6 +9,7 @@ const userId = ref(1001)
 const msg = ref('')
 const ticket = ref<{ id: number; status: string; checkinCode: string } | null>(null)
 const loading = ref(false)
+const notifications = ref<NotificationItem[]>([])
 
 function iso(d: Date) {
   const p = (n: number) => String(n).padStart(2, '0')
@@ -88,6 +89,38 @@ async function back() {
   }
 }
 
+async function cancel() {
+  if (!ticket.value) return
+  try {
+    const r = await api.cancel(ticket.value.id, userId.value)
+    ticket.value = { ...ticket.value, status: r.status }
+    msg.value = '预约已取消，座位已释放'
+    await load()
+  } catch (e: any) {
+    msg.value = e.message
+  }
+}
+
+async function finish() {
+  if (!ticket.value) return
+  try {
+    const r = await api.finish(ticket.value.id)
+    ticket.value = { ...ticket.value, status: r.status }
+    msg.value = '已结束使用，座位正常释放'
+    await load()
+  } catch (e: any) {
+    msg.value = e.message
+  }
+}
+
+async function loadNotifications() {
+  try {
+    notifications.value = await api.notifications(userId.value)
+  } catch (e: any) {
+    msg.value = e.message
+  }
+}
+
 function seatClass(seat: Seat) {
   if (seat.status === 'DISABLED') return 'seat disabled'
   if (seat.busy) return 'seat busy'
@@ -116,6 +149,7 @@ onMounted(load)
       <label>结束 <input v-model="end" type="datetime-local" @change="load" /></label>
       <label>学号 <input v-model.number="userId" type="number" /></label>
       <button @click="load" :disabled="loading">{{ loading ? '加载中…' : '刷新座位' }}</button>
+      <button @click="loadNotifications">查看通知</button>
       <span class="stat">空闲 {{ stats.free }} / {{ stats.total }}</span>
     </section>
 
@@ -148,8 +182,21 @@ onMounted(load)
         <button @click="checkin">模拟扫码签到</button>
         <button @click="away">暂离 30 分钟</button>
         <button @click="back">返回座位</button>
+        <button @click="finish">结束使用</button>
+        <button @click="cancel" class="ghost">取消预约</button>
       </div>
       <p class="hint">演示环境默认把签到码直接显示出来；真机上该码渲染为二维码，由自助机或手机扫描。</p>
+    </section>
+
+    <section v-if="notifications.length" class="notifications">
+      <h2>我的通知（{{ notifications.length }}）</h2>
+      <ul>
+        <li v-for="n in notifications" :key="n.id" :class="{ unread: !n.read }">
+          <strong>{{ n.title }}</strong>
+          <span>{{ n.content }}</span>
+          <small>{{ n.createdAt }}</small>
+        </li>
+      </ul>
     </section>
   </main>
 </template>

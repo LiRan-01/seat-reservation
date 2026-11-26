@@ -50,6 +50,16 @@ public class ReservationController {
         return ok(view(reservationService.forceRelease(id, reason)));
     }
 
+    @PostMapping("/{id}/cancel")
+    public Map<String, Object> cancel(@PathVariable Long id, @RequestParam Long userId) {
+        return ok(view(reservationService.cancel(id, userId)));
+    }
+
+    @PostMapping("/{id}/finish")
+    public Map<String, Object> finish(@PathVariable Long id) {
+        return ok(view(reservationService.finish(id)));
+    }
+
     @GetMapping
     public Map<String, Object> list(@RequestParam Long userId) {
         return ok(reservationService.listByUser(userId).stream().map(this::view).toList());

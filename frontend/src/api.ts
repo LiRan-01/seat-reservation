@@ -34,5 +34,21 @@ export const api = {
     }),
   away: (id: number, minutes = 30) =>
     request<{ id: number; status: string }>(`/api/reservations/${id}/away?minutes=${minutes}`, { method: 'POST' }),
-  back: (id: number) => request<{ id: number; status: string }>(`/api/reservations/${id}/back`, { method: 'POST' })
+  back: (id: number) => request<{ id: number; status: string }>(`/api/reservations/${id}/back`, { method: 'POST' }),
+  cancel: (id: number, userId: number) =>
+    request<{ id: number; status: string }>(`/api/reservations/${id}/cancel?userId=${userId}`, { method: 'POST' }),
+  finish: (id: number) =>
+    request<{ id: number; status: string }>(`/api/reservations/${id}/finish`, { method: 'POST' }),
+  notifications: (userId: number) =>
+    request<NotificationItem[]>(`/api/notifications?userId=${userId}`)
+}
+
+export type NotificationItem = {
+  id: number
+  type: string
+  title: string
+  content: string
+  seatId: number | null
+  read: boolean
+  createdAt: string
 }

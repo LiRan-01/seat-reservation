@@ -29,6 +29,9 @@ public class ReleaseJob {
     @Value("${app.no-show-minutes}")
     private int noShowMinutes;
 
+    @Value("${app.violation-score}")
+    private int violationScore;
+
     public ReleaseJob(ReservationRepository reservationRepository,
                       SeatRepository seatRepository,
                       ViolationRepository violationRepository,
@@ -78,7 +81,7 @@ public class ReleaseJob {
         v.setReservationId(r.getId());
         v.setUserId(r.getUserId());
         v.setType(type);
-        v.setScore(-5);
+        v.setScore(violationScore);
         violationRepository.save(v);
         waitlistService.notifyFirst(r.getSeatId());
         return 1;
