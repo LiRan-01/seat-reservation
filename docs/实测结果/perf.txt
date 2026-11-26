@@ -1,13 +1,53 @@
-== 并发与性能实测 2026-11-26 08:17:39 ==
+== 并发与性能实测 2026-11-26 09:04:35 ==
 座位总数：40
-座位图查询 150 次请求（30 并发）：P50=286ms，P95=389ms
-抢座 200 次请求（40 座位 × 5 次，40 并发）：成功 40，冲突 160，服务异常 0，其他 0，超卖单数 0
+座位图查询 150 次请求（30 并发）：P50=241ms，P95=346ms
+抢座 200 次请求（40 座位 × 5 次，40 并发）：成功 39，冲突 161，服务异常 0，其他 0，超卖单数 0
 响应码分布：
-     40 "code":"OK"
-    160 "code":"TIME_CONFLICT"
-预约创建成功 40 / 40（签到码 40 个）
-签到请求 40 条（20 并发）：P50=43ms，P95=55ms
+     39 "code":"OK"
+    161 "code":"TIME_CONFLICT"
+座位 1 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 2 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 3 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 4 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 5 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 6 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 7 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 8 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 9 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 10 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 11 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 12 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 13 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 14 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 15 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 16 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 17 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 18 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 19 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 20 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 21 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 22 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 23 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 24 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 25 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 26 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 27 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 28 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 29 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 30 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 31 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 32 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 33 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 34 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 35 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 36 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 37 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 38 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 39 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+座位 40 创建失败：{"code":"TIME_CONFLICT","message":"该时段座位已被预约","data":null}
+预约创建成功 0 / 40（签到码 0 个）
+签到请求 0 条（20 并发）：P50=0ms，P95=0ms
 mysql: [Warning] Using a password on the command line interface can be insecure.
-已插入过期未签到预约 500 条，等待定时任务释放（最多 150 秒）…
-定时任务单批：剩余未处理 0 条，日志 released=500, cost=1278ms
+已插入过期未签到预约 544 条，等待定时任务释放（最多 150 秒）…
+定时任务单批：剩余未处理 40 条，日志 
 == 实测结束 ==
