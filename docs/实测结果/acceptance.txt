@@ -1,4 +1,4 @@
-== 智能自习室座位预约系统 · 功能验收 2026-11-26 09:03:33 ==
+== 智能自习室座位预约系统 · 功能验收 2026-11-26 12:16:39 ==
 PASS FT-01 | 座位图返回 20 个座位（A-01…A-20），空闲座位 busy=false
 PASS FT-02 | 预约成功 id=1，签到码长度=137
 PASS FT-03 | 第二人预约同一座位同一时段被拒绝（TIME_CONFLICT）
@@ -10,7 +10,7 @@ PASS ET-04 | 23:30→次日 00:30 跨天预约成功，时段连续不重叠
 PASS FT-09 | 管理员强制释放成功，预约转为 FORCED
 INFO 已构造超时预约 id=5 与候补 user=1004，等待定时任务（最多 120 秒）…
 PASS FT-08 | 未签到 30 分钟的预约被定时任务置为 NO_SHOW 并释放座位
-PASS FT-08b | 任务日志：2026-11-26T09:04:29.461Z  INFO 1 --- [   scheduling-1] cn.ccut.seat.service.WaitlistService     : waitlist notified: sea
+PASS FT-08b | 任务日志：2026-11-26T12:17:35.124Z  INFO 1 --- [   scheduling-1] cn.ccut.seat.service.WaitlistService     : waitlist notified: sea
 PASS FT-07 | 座位释放后候补首位收到通知（日志 waitlist notified）
 PASS FT-10 | 统计接口返回当日上座率数据，当日预约 1 条："rate":0.003
 == 结果：PASS=13 FAIL=0 ==
