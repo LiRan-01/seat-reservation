@@ -3,7 +3,6 @@ package cn.ccut.seat.web;
 import cn.ccut.seat.service.WaitlistService;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,7 @@ public class WaitlistController {
     @PostMapping
     public Map<String, Object> join(@RequestBody WaitRequest req) {
         var entry = waitlistService.join(req.seatId(), req.userId(),
-                LocalDateTime.parse(req.start()), LocalDateTime.parse(req.end()));
+                DateTimeParam.parse(req.start()), DateTimeParam.parse(req.end()));
         WaitlistService.WaitPosition p = waitlistService.describe(entry);
         return ok(positionView(p), "已加入候补");
     }

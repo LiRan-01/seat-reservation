@@ -35,8 +35,8 @@ public class SeatController {
     public Map<String, Object> seats(@PathVariable Long roomId,
                                      @RequestParam(required = false) String start,
                                      @RequestParam(required = false) String end) {
-        LocalDateTime s = start == null ? LocalDateTime.now() : LocalDateTime.parse(start);
-        LocalDateTime e = end == null ? s.plusHours(2) : LocalDateTime.parse(end);
+        LocalDateTime s = start == null ? LocalDateTime.now() : DateTimeParam.parse(start);
+        LocalDateTime e = end == null ? s.plusHours(2) : DateTimeParam.parse(end);
         // 一次查出该时段所有重叠的有效预约，提取被占用的座位号集合
         Set<Long> busySeatIds = new HashSet<>();
         for (Reservation r : reservationRepository.findOverlapping(s, e)) {

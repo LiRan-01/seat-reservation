@@ -4,7 +4,6 @@ import cn.ccut.seat.domain.Reservation;
 import cn.ccut.seat.service.ReservationService;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -24,7 +23,7 @@ public class ReservationController {
     @PostMapping
     public Map<String, Object> reserve(@RequestBody ReserveRequest req) {
         Reservation r = reservationService.reserve(req.userId(), req.seatId(),
-                LocalDateTime.parse(req.start()), LocalDateTime.parse(req.end()));
+                DateTimeParam.parse(req.start()), DateTimeParam.parse(req.end()));
         return ok(view(r));
     }
 
