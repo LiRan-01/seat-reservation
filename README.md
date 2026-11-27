@@ -10,9 +10,11 @@
 
 1. 打开仓库页面，点击 **Code → Codespaces → Create codespace**；
 2. 等待容器初始化：`.devcontainer/setup.sh` 会按需安装 Maven（镜像本身只带 JDK），并预取后端依赖、安装前端依赖；某一步失败只打印告警，不会阻断容器创建；
-3. 容器启动后会尝试执行 `docker compose up -d --build`；若日志中没有自动拉起，在终端手动执行一次即可，随后在 **端口 5173** 打开前端页面选座演示。
+3. 容器启动后会自动执行 `docker compose up -d --build`（终端里能看到这四个容器的构建日志）；若某次没有自动拉起，手动执行一次同样的命令即可，随后在 **端口 5173** 打开前端页面选座演示。
 
 > 2026-11-25 实测：GitHub Actions 上一条命令拉起 mysql / redis / backend / frontend 四个容器，40 个座位初始化正常，功能验收 13/13 通过，原始结果见 `docs/实测结果/`。
+>
+> 2026-11-27 复测：在全新的 codespace 里从零创建（2 核 / 8 GB），未做任何手工干预即完成构建，容器内 Maven 3.8.7 安装成功、四个容器全部启动（mysql 为 healthy）、前端 5173 返回 200、`bash scripts/acceptance-test.sh` 结果为 `PASS=13 FAIL=0`。
 
 本地已有 Docker 时，等价命令只有一条：
 
