@@ -89,3 +89,34 @@ header .sub { color: #646a73; margin: 0 0 24px; }
 .notifications li strong { font-size: 14px; color: #1f2329; }
 .notifications li small { color: #86909c; }
 .notifications li.unread { background: #eef4ff; border-left: 3px solid #3370ff; }
+
+/* 未读小红点 */
+.notify-btn { position: relative; }
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px;
+  background: #f54a45; color: #fff; border-radius: 9px;
+  font-size: 11px; font-weight: 600; line-height: 1;
+}
+
+.section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.section-head h2 { font-size: 16px; margin: 0; display: flex; align-items: center; }
+
+.link-btn {
+  border: 1px solid #c9cdd4; background: #fff; color: #4e5969;
+  padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;
+}
+.link-btn:hover { border-color: #3370ff; color: #3370ff; }
+
+.n-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+/* 候补排队卡片 */
+.waitlist {
+  margin-top: 24px; background: #fff; border-radius: 12px; padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}
+.waitlist ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.wait-row {
+  display: flex; align-items: center; gap: 20px; padding: 12px 14px;
+  background: #f7f8fa; border-radius: 10px; font-size: 13px; color: #4e5969;
+}

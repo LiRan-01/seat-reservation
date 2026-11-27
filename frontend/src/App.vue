@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { api, type Seat, type NotificationItem } from './api'
+import { api, type Seat, type NotificationItem, type WaitPosition } from './api'
 
 const rooms = ref<{ id: number; name: string; floor: number }[]>([])
 const roomId = ref(1)
@@ -10,6 +10,8 @@ const msg = ref('')
 const ticket = ref<{ id: number; status: string; checkinCode: string } | null>(null)
 const loading = ref(false)
 const notifications = ref<NotificationItem[]>([])
+const unreadCount = ref(0)
+const waitPositions = ref<WaitPosition[]>([])
 
 function iso(d: Date) {
   const p = (n: number) => String(n).padStart(2, '0')
@@ -39,8 +41,12 @@ async function load() {
 }
 
 async function pick(seat: Seat) {
+  if (seat.status === 'DISABLED') {
+    msg.value = `座位 ${seat.code} 已停用，无法预约或候补`
+    return
+  }
   if (seat.busy) {
-    msg.value = `座位 ${seat.code} 在该时段已被预约`
+    await joinWait(seat)
     return
   }
   try {
@@ -48,6 +54,16 @@ async function pick(seat: Seat) {
     ticket.value = r
     msg.value = `预约成功：${seat.code}，凭签到码到馆扫码`
     await load()
+  } catch (e: any) {
+    msg.value = e.message
+  }
+}
+
+async function joinWait(seat: Seat) {
+  try {
+    const p = await api.joinWaitlist(userId.value, seat.id, start.value, end.value)
+    msg.value = `已登记候补 ${seat.code}：前面还有 ${p.aheadCount} 人，预计等待 ${p.estimatedWaitMinutes} 分钟`
+    await loadWaitPositions()
   } catch (e: any) {
     msg.value = e.message
   }
@@ -116,6 +132,44 @@ async function finish() {
 async function loadNotifications() {
   try {
     notifications.value = await api.notifications(userId.value)
+    await loadUnreadCount()
+  } catch (e: any) {
+    msg.value = e.message
+  }
+}
+
+async function loadUnreadCount() {
+  try {
+    unreadCount.value = await api.unreadCount(userId.value)
+  } catch (e: any) {
+    msg.value = e.message
+  }
+}
+
+async function markRead(id: number) {
+  try {
+    await api.markRead(id)
+    const n = notifications.value.find(x => x.id === id)
+    if (n) n.read = true
+    await loadUnreadCount()
+  } catch (e: any) {
+    msg.value = e.message
+  }
+}
+
+async function markAllRead() {
+  try {
+    await api.markAllRead(userId.value)
+    notifications.value.forEach(n => { n.read = true })
+    unreadCount.value = 0
+  } catch (e: any) {
+    msg.value = e.message
+  }
+}
+
+async function loadWaitPositions() {
+  try {
+    waitPositions.value = await api.waitPosition(userId.value)
   } catch (e: any) {
     msg.value = e.message
   }
@@ -129,7 +183,11 @@ function seatClass(seat: Seat) {
   return 'seat free'
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  loadUnreadCount()
+  loadWaitPositions()
+})
 </script>
 
 <template>
@@ -149,7 +207,10 @@ onMounted(load)
       <label>结束 <input v-model="end" type="datetime-local" @change="load" /></label>
       <label>学号 <input v-model.number="userId" type="number" /></label>
       <button @click="load" :disabled="loading">{{ loading ? '加载中…' : '刷新座位' }}</button>
-      <button @click="loadNotifications">查看通知</button>
+      <button class="notify-btn" @click="loadNotifications">
+        查看通知
+        <span v-if="unreadCount" class="badge">{{ unreadCount }}</span>
+      </button>
       <span class="stat">空闲 {{ stats.free }} / {{ stats.total }}</span>
     </section>
 
@@ -189,12 +250,32 @@ onMounted(load)
     </section>
 
     <section v-if="notifications.length" class="notifications">
-      <h2>我的通知（{{ notifications.length }}）</h2>
+      <div class="section-head">
+        <h2>我的通知（{{ notifications.length }}）<span v-if="unreadCount" class="badge">{{ unreadCount }}</span></h2>
+        <button v-if="unreadCount" class="link-btn" @click="markAllRead">全部已读</button>
+      </div>
       <ul>
         <li v-for="n in notifications" :key="n.id" :class="{ unread: !n.read }">
-          <strong>{{ n.title }}</strong>
+          <div class="n-title">
+            <strong>{{ n.title }}</strong>
+            <button v-if="!n.read" class="link-btn" @click="markRead(n.id)">标为已读</button>
+          </div>
           <span>{{ n.content }}</span>
           <small>{{ n.createdAt }}</small>
+        </li>
+      </ul>
+    </section>
+
+    <section v-if="waitPositions.length" class="waitlist">
+      <div class="section-head">
+        <h2>我的候补（{{ waitPositions.length }}）</h2>
+        <button class="link-btn" @click="loadWaitPositions">刷新排队位置</button>
+      </div>
+      <ul>
+        <li v-for="p in waitPositions" :key="p.id" class="wait-row">
+          <span>座位 #{{ p.seatId }}</span>
+          <span>前面还有 {{ p.aheadCount }} 人</span>
+          <span>预计等待 {{ p.estimatedWaitMinutes }} 分钟</span>
         </li>
       </ul>
     </section>

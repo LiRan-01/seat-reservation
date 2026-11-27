@@ -25,6 +25,21 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                       @Param("start") LocalDateTime start,
                       @Param("end") LocalDateTime end);
 
+    /**
+     * 批量查询某时段内所有重叠的有效预约（座位图接口用）。
+     * 一次取全量再在内存里按座位匹配，避免对每个座位各查一次形成 N+1。
+     * 过滤条件与 countOverlap 保持一致。
+     */
+    @Query("""
+           select r from Reservation r
+           where r.status in (cn.ccut.seat.domain.ReservationStatus.RESERVED,
+                              cn.ccut.seat.domain.ReservationStatus.USING,
+                              cn.ccut.seat.domain.ReservationStatus.AWAY)
+             and r.startTime < :end and r.endTime > :start
+           """)
+    List<Reservation> findOverlapping(@Param("start") LocalDateTime start,
+                                      @Param("end") LocalDateTime end);
+
     /** 条件更新：只有当前状态匹配才生效，保证定时任务幂等 */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Reservation r set r.status = :to where r.id = :id and r.status = :from")

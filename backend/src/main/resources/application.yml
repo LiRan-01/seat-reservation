@@ -28,6 +28,7 @@ app:
   credit-threshold: 60
   violation-score: -5
   checkin-code-minutes: 120
+  wait-estimate-minutes: 30
 
 logging:
   level:

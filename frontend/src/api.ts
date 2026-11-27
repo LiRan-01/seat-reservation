@@ -6,6 +6,23 @@ export type Seat = {
   busy: boolean
 }
 
+export type NotificationItem = {
+  id: number
+  type: string
+  title: string
+  content: string
+  seatId: number | null
+  read: boolean
+  createdAt: string
+}
+
+export type WaitPosition = {
+  id: number
+  seatId: number
+  aheadCount: number
+  estimatedWaitMinutes: number
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
@@ -40,15 +57,18 @@ export const api = {
   finish: (id: number) =>
     request<{ id: number; status: string }>(`/api/reservations/${id}/finish`, { method: 'POST' }),
   notifications: (userId: number) =>
-    request<NotificationItem[]>(`/api/notifications?userId=${userId}`)
-}
-
-export type NotificationItem = {
-  id: number
-  type: string
-  title: string
-  content: string
-  seatId: number | null
-  read: boolean
-  createdAt: string
+    request<NotificationItem[]>(`/api/notifications?userId=${userId}`),
+  unreadCount: (userId: number) =>
+    request<number>(`/api/notifications/unread-count?userId=${userId}`),
+  markRead: (id: number) =>
+    request<number>(`/api/notifications/${id}/read`, { method: 'POST' }),
+  markAllRead: (userId: number) =>
+    request<number>(`/api/notifications/read-all?userId=${userId}`, { method: 'POST' }),
+  joinWaitlist: (userId: number, seatId: number, start: string, end: string) =>
+    request<WaitPosition>('/api/waitlist', {
+      method: 'POST',
+      body: JSON.stringify({ userId, seatId, start, end })
+    }),
+  waitPosition: (userId: number) =>
+    request<WaitPosition[]>(`/api/waitlist/position?userId=${userId}`)
 }
