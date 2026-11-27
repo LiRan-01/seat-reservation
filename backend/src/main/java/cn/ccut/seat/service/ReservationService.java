@@ -183,9 +183,7 @@ public class ReservationService {
     }
 
     public List<Reservation> listByUser(Long userId) {
-        return reservationRepository.findAll().stream()
-                .filter(r -> r.getUserId().equals(userId))
-                .toList();
+        return reservationRepository.findByUserId(userId);
     }
 
     public void updateSeat(Long seatId, SeatStatus status) {

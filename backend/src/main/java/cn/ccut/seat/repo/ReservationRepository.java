@@ -55,4 +55,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     /** 统计报表：取某一天内的预约（按开始时间落在当天） */
     List<Reservation> findByStartTimeBetween(LocalDateTime start, LocalDateTime end);
+
+    /** 按学号查询本人全部预约，由数据库直接过滤，避免全表加载后内存筛选 */
+    List<Reservation> findByUserId(Long userId);
 }
