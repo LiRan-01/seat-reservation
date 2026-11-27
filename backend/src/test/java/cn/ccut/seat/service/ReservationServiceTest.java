@@ -17,9 +17,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -48,6 +52,7 @@ class ReservationServiceTest {
     void setUp() {
         ReflectionTestUtils.setField(reservationService, "creditThreshold", 60);
         ReflectionTestUtils.setField(reservationService, "checkinCodeMinutes", 120);
+        ReflectionTestUtils.setField(reservationService, "awayMaxMinutes", 30);
     }
 
     private Reservation reservation(ReservationStatus status) {
@@ -120,5 +125,68 @@ class ReservationServiceTest {
 
         assertEquals("STATUS_INVALID", ex.getCode());
         verify(reservationRepository, never()).markStatus(anyLong(), any(), any());
+    }
+
+    @Test
+    void awayFromUsingSucceeds() {
+        Reservation r = reservation(ReservationStatus.USING);
+        when(reservationRepository.findById(5L)).thenReturn(Optional.of(r));
+        when(seatRepository.findById(21L)).thenReturn(Optional.of(new Seat()));
+
+        Reservation out = reservationService.away(5L, 30);
+
+        assertEquals(ReservationStatus.AWAY, out.getStatus());
+        assertNotNull(out.getAwayUntil());
+        verify(reservationRepository).save(any(Reservation.class));
+        verify(seatRepository).save(any(Seat.class));
+    }
+
+    @Test
+    void awayCappedByMaxMinutes() {
+        Reservation r = reservation(ReservationStatus.USING);
+        when(reservationRepository.findById(5L)).thenReturn(Optional.of(r));
+
+        LocalDateTime before = LocalDateTime.now();
+        reservationService.away(5L, 120);
+
+        // 传入120分钟，应被配置上限30分钟截断
+        long minutes = Duration.between(before, r.getAwayUntil()).toMinutes();
+        org.junit.jupiter.api.Assertions.assertTrue(minutes >= 30 && minutes <= 31);
+    }
+
+    @Test
+    void awayWrongStatusRejected() {
+        Reservation r = reservation(ReservationStatus.RESERVED);
+        when(reservationRepository.findById(5L)).thenReturn(Optional.of(r));
+
+        BizException ex = assertThrows(BizException.class, () -> reservationService.away(5L, 30));
+
+        assertEquals("STATUS_INVALID", ex.getCode());
+        verify(reservationRepository, never()).save(any(Reservation.class));
+    }
+
+    @Test
+    void backFromAwaySucceeds() {
+        Reservation r = reservation(ReservationStatus.AWAY);
+        r.setAwayUntil(LocalDateTime.now().plusMinutes(10));
+        when(reservationRepository.findById(5L)).thenReturn(Optional.of(r));
+        when(seatRepository.findById(21L)).thenReturn(Optional.of(new Seat()));
+
+        Reservation out = reservationService.back(5L);
+
+        assertEquals(ReservationStatus.USING, out.getStatus());
+        assertNull(out.getAwayUntil());
+        verify(seatRepository).save(any(Seat.class));
+    }
+
+    @Test
+    void backWrongStatusRejected() {
+        Reservation r = reservation(ReservationStatus.USING);
+        when(reservationRepository.findById(5L)).thenReturn(Optional.of(r));
+
+        BizException ex = assertThrows(BizException.class, () -> reservationService.back(5L));
+
+        assertEquals("STATUS_INVALID", ex.getCode());
+        verify(reservationRepository, never()).save(any(Reservation.class));
     }
 }

@@ -29,6 +29,9 @@ public class ReservationService {
     @Value("${app.checkin-code-minutes}")
     private int checkinCodeMinutes;
 
+    @Value("${app.away-max-minutes}")
+    private int awayMaxMinutes;
+
     public ReservationService(SeatRepository seatRepository,
                               ReservationRepository reservationRepository,
                               CreditRepository creditRepository,
@@ -92,7 +95,7 @@ public class ReservationService {
             throw new BizException("STATUS_INVALID", "只有使用中的预约可以暂离");
         }
         r.setStatus(ReservationStatus.AWAY);
-        r.setAwayUntil(LocalDateTime.now().plusMinutes(Math.min(minutes, 30)));
+        r.setAwayUntil(LocalDateTime.now().plusMinutes(Math.min(minutes, awayMaxMinutes)));
         reservationRepository.save(r);
         updateSeat(r.getSeatId(), SeatStatus.AWAY);
         return r;
