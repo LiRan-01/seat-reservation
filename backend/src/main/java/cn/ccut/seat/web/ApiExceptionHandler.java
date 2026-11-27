@@ -1,5 +1,7 @@
 package cn.ccut.seat.web;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -10,6 +12,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     @ExceptionHandler(BizException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -39,7 +43,9 @@ public class ApiExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, Object> other(Exception e) {
-        return body("SERVER_ERROR", e.getMessage() == null ? "服务异常" : e.getMessage());
+        // 真实错误只记日志，不把 SQL、类名等内部细节返回给前端
+        log.error("unhandled server error", e);
+        return body("SERVER_ERROR", "服务开小差了，请稍后再试");
     }
 
     private Map<String, Object> body(String code, String message) {
