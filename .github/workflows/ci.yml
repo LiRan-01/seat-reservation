@@ -16,6 +16,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+      - name: Unit tests
+        run: mvn -B -q test
+        working-directory: backend
       - name: Build backend
         run: mvn -B -q -DskipTests package
         working-directory: backend

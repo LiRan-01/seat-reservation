@@ -123,9 +123,9 @@ async function loadNotifications() {
 
 function seatClass(seat: Seat) {
   if (seat.status === 'DISABLED') return 'seat disabled'
-  if (seat.busy) return 'seat busy'
   if (seat.status === 'USING') return 'seat using'
   if (seat.status === 'AWAY') return 'seat away'
+  if (seat.status === 'RESERVED' || seat.busy) return 'seat busy'
   return 'seat free'
 }
 
