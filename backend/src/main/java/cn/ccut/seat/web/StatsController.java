@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 统计报表：按自然日统计上座率。
@@ -40,12 +41,19 @@ public class StatsController {
         long seatCount = seatRepository.count();
         double availableHours = seatCount * (CLOSE_HOUR - OPEN_HOUR);
 
+        // 一次查出整个日期范围的预约，在内存按天分组，避免逐天各查一次
+        LocalDateTime rangeStart = from.atTime(OPEN_HOUR, 0);
+        LocalDateTime rangeEnd = to.atTime(CLOSE_HOUR, 0);
+        Map<LocalDate, List<Reservation>> byDay = reservationRepository
+                .findByStartTimeBetween(rangeStart, rangeEnd).stream()
+                .collect(Collectors.groupingBy(r -> r.getStartTime().toLocalDate()));
+
         List<Map<String, Object>> days = new ArrayList<>();
         LocalDate day = from;
         while (!day.isAfter(to)) {
             LocalDateTime dayStart = day.atTime(OPEN_HOUR, 0);
             LocalDateTime dayEnd = day.atTime(CLOSE_HOUR, 0);
-            List<Reservation> list = reservationRepository.findByStartTimeBetween(dayStart, dayEnd);
+            List<Reservation> list = byDay.getOrDefault(day, List.of());
 
             long valid = 0;
             double seatHours = 0;
